@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xác Suất – Độ Chính Xác & Rủi Ro trong Tin Học</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap');
+
+  :root {
+    --bg:        #0f1117;
+    --surface:   #181c27;
+    --surface2:  #1e2335;
+    --border:    #2a3050;
+    --accent:    #6c63ff;
+    --accent2:   #ff6584;
+    --accent3:   #43e97b;
+    --accent4:   #f9ca24;
+    --text:      #e8eaf6;
+    --muted:     #8892b0;
+    --code-bg:   #141824;
+    --radius:    12px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,17,23,0.85);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 58px;
+  }
+  .nav-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .85rem;
+    color: var(--accent);
+    letter-spacing: .04em;
+  }
+  .nav-links { display: flex; gap: 1.6rem; }
+  .nav-links a {
+    font-size: .82rem; color: var(--muted);
+    text-decoration: none; letter-spacing: .04em;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 92vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    padding: 5rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 30%, rgba(108,99,255,.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 70%, rgba(255,101,132,.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: rgba(108,99,255,.15);
+    border: 1px solid rgba(108,99,255,.35);
+    color: #a89cff;
+    font-size: .78rem; font-family: 'JetBrains Mono', monospace;
+    padding: .35rem 1rem; border-radius: 99px;
+    margin-bottom: 1.8rem; letter-spacing: .06em;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    font-weight: 700; line-height: 1.15;
+    max-width: 800px;
+    margin-bottom: 1.2rem;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 1.05rem; color: var(--muted);
+    max-width: 560px; margin-bottom: 2.4rem;
+  }
+  .hero-meta {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+    justify-content: center; margin-bottom: 3rem;
+  }
+  .hero-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: .4rem 1rem; border-radius: 8px;
+    font-size: .82rem; color: var(--muted);
+    display: flex; align-items: center; gap: .4rem;
+  }
+  .dice-grid {
+    display: grid; grid-template-columns: repeat(6,1fr); gap: 10px;
+    max-width: 480px; margin: 0 auto;
+  }
+  .die {
+    width: 60px; height: 60px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform .15s, background .15s, border-color .15s;
+    user-select: none;
+  }
+  .die:hover { transform: translateY(-3px); background: var(--surface2); border-color: var(--accent); }
+  .die.highlight { background: rgba(108,99,255,.25); border-color: var(--accent); }
+
+  /* ── SECTIONS ── */
+  section { padding: 5rem 2rem; }
+  .container { max-width: 960px; margin: 0 auto; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .75rem; letter-spacing: .12em; color: var(--accent);
+    text-transform: uppercase; margin-bottom: .6rem;
+  }
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.7rem, 4vw, 2.6rem);
+    font-weight: 700; margin-bottom: 1rem;
+  }
+  h3 {
+    font-size: 1.15rem; font-weight: 600;
+    margin-bottom: .7rem; color: var(--text);
+  }
+  .lead { font-size: 1.05rem; color: var(--muted); margin-bottom: 2.5rem; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.6rem;
+    transition: border-color .2s, transform .15s;
+  }
+  .card:hover { border-color: rgba(108,99,255,.45); transform: translateY(-2px); }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.2rem; }
+
+  /* ── FORMULA BLOCK ── */
+  .formula-box {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.8rem;
+    margin: 1.4rem 0;
+  }
+  .formula-box .f-label {
+    font-size: .72rem; font-family: 'JetBrains Mono', monospace;
+    color: var(--accent); letter-spacing: .1em; margin-bottom: .5rem;
+  }
+  .formula-box .f-main {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.35rem; font-weight: 600; color: var(--text);
+  }
+  .formula-box .f-note { font-size: .88rem; color: var(--muted); margin-top: .5rem; }
+
+  /* ── ACCENT COLORS ── */
+  .c-purple { color: var(--accent); }
+  .c-pink   { color: var(--accent2); }
+  .c-green  { color: var(--accent3); }
+  .c-yellow { color: var(--accent4); }
+  .bg-purple { background: rgba(108,99,255,.12); border-color: rgba(108,99,255,.3); }
+  .bg-pink   { background: rgba(255,101,132,.1);  border-color: rgba(255,101,132,.25); }
+  .bg-green  { background: rgba(67,233,123,.1);   border-color: rgba(67,233,123,.25); }
+  .bg-yellow { background: rgba(249,202,36,.1);   border-color: rgba(249,202,36,.25); }
+
+  /* ── ICON BADGE ── */
+  .icon-lg {
+    width: 46px; height: 46px;
+    background: rgba(108,99,255,.15);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; margin-bottom: 1rem;
+  }
+
+  /* ── TIMELINE (agenda) ── */
+  .timeline { position: relative; padding-left: 2rem; }
+  .timeline::before {
+    content: ''; position: absolute; left: 6px; top: 0; bottom: 0;
+    width: 2px; background: var(--border);
+  }
+  .tl-item { position: relative; margin-bottom: 1.4rem; }
+  .tl-dot {
+    position: absolute; left: -2rem; top: 4px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 8px rgba(108,99,255,.5);
+  }
+  .tl-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem; color: var(--accent); margin-bottom: .2rem;
+  }
+  .tl-title { font-weight: 600; margin-bottom: .2rem; }
+  .tl-desc { font-size: .9rem; color: var(--muted); }
+
+  /* ── EXAMPLE BOXES ── */
+  .example-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.4rem;
+    margin: 1rem 0;
+  }
+  .example-box .ex-label {
+    display: inline-block;
+    background: rgba(108,99,255,.2);
+    color: var(--accent);
+    font-size: .72rem; font-family: 'JetBrains Mono', monospace;
+    padding: .2rem .6rem; border-radius: 4px;
+    margin-bottom: .8rem; letter-spacing: .06em;
+  }
+  .step-list { list-style: none; padding: 0; }
+  .step-list li {
+    padding: .5rem 0 .5rem 1.6rem;
+    position: relative; font-size: .95rem;
+    border-bottom: 1px dashed rgba(255,255,255,.06);
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-list li::before {
+    content: '→';
+    position: absolute; left: 0;
+    color: var(--accent); font-weight: 600;
+  }
+  .answer {
+    margin-top: .8rem;
+    background: rgba(67,233,123,.08);
+    border: 1px solid rgba(67,233,123,.2);
+    border-radius: 8px; padding: .8rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .95rem;
+  }
+  .answer span { color: var(--accent3); font-weight: 600; }
+
+  /* ── QUIZ / EXERCISE ── */
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.6rem;
+    margin-bottom: 1.2rem;
+    transition: border-color .2s;
+  }
+  .quiz-card:hover { border-color: rgba(108,99,255,.4); }
+  .difficulty {
+    display: inline-block;
+    font-size: .7rem; font-family: 'JetBrains Mono', monospace;
+    padding: .2rem .6rem; border-radius: 99px;
+    margin-bottom: .8rem; letter-spacing: .06em; font-weight: 600;
+  }
+  .easy   { background: rgba(67,233,123,.15);  color: #43e97b; }
+  .medium { background: rgba(249,202,36,.15);  color: #f9ca24; }
+  .hard   { background: rgba(255,101,132,.15); color: #ff6584; }
+  .quiz-q { font-weight: 600; margin-bottom: .8rem; }
+  .options { display: flex; flex-direction: column; gap: .5rem; }
+  .opt-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .6rem 1rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .9rem; color: var(--text);
+    cursor: pointer; text-align: left;
+    transition: background .15s, border-color .15s;
+  }
+  .opt-btn:hover  { background: rgba(108,99,255,.15); border-color: var(--accent); }
+  .opt-btn.correct { background: rgba(67,233,123,.18); border-color: var(--accent3); color: var(--accent3); }
+  .opt-btn.wrong   { background: rgba(255,101,132,.15); border-color: var(--accent2); color: var(--accent2); }
+  .feedback {
+    margin-top: .7rem; font-size: .88rem; padding: .6rem .9rem;
+    border-radius: 8px; display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: rgba(67,233,123,.1);  color: var(--accent3); border: 1px solid rgba(67,233,123,.25); }
+  .feedback.no  { background: rgba(255,101,132,.1); color: var(--accent2); border: 1px solid rgba(255,101,132,.25); }
+
+  /* ── SIM ── */
+  .sim-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem; text-align: center;
+    margin: 1.5rem 0;
+  }
+  .sim-display {
+    font-size: 5rem; margin: 1rem 0;
+    min-height: 80px;
+    display: flex; justify-content: center; align-items: center;
+    gap: 1rem;
+  }
+  .sim-stats {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;
+    margin-top: 1rem;
+  }
+  .stat-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: .5rem 1.2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .85rem;
+  }
+  .stat-chip span { color: var(--accent); font-weight: 600; }
+  .btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: var(--accent);
+    color: #fff; border: none;
+    padding: .65rem 1.6rem; border-radius: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .95rem; font-weight: 600;
+    cursor: pointer; transition: opacity .2s, transform .1s;
+    margin: .3rem;
+  }
+  .btn:hover   { opacity: .88; }
+  .btn:active  { transform: scale(.97); }
+  .btn.secondary {
+    background: var(--surface2);
+    border: 1px solid var(--border); color: var(--text);
+  }
+  .btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── BAR ── */
+  .bar-wrap { margin: .4rem 0; }
+  .bar-label { font-size: .8rem; color: var(--muted); margin-bottom: .2rem; display: flex; justify-content: space-between; }
+  .bar-track { background: var(--surface2); border-radius: 99px; height: 8px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 99px; transition: width .6s; }
+
+  /* ── AI SECTION ── */
+  .ai-card {
+    display: flex; gap: 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.4rem; margin-bottom: 1rem;
+    align-items: flex-start;
+    transition: border-color .2s;
+  }
+  .ai-card:hover { border-color: rgba(108,99,255,.4); }
+  .ai-icon { font-size: 1.8rem; min-width: 2rem; margin-top: .1rem; }
+  .ai-content h4 { font-weight: 600; margin-bottom: .3rem; }
+  .ai-content p  { font-size: .92rem; color: var(--muted); }
+  .prob-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .8rem; font-weight: 600;
+    background: rgba(108,99,255,.2);
+    border: 1px solid rgba(108,99,255,.35);
+    color: var(--accent);
+    padding: .15rem .5rem; border-radius: 4px;
+    margin-left: .4rem;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem; text-align: center;
+    font-size: .82rem; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .5s, transform .5s; }
+  .reveal.in-view { opacity: 1; transform: none; }
+
+  /* ── MOBILE ── */
+  @media(max-width:640px){
+    nav { padding: 0 1rem; }
+    .nav-links { display: none; }
+    section { padding: 3rem 1rem; }
+    .dice-grid { grid-template-columns: repeat(3,1fr); }
+    .die { width: 52px; height: 52px; }
+  }
+
+  /* spin animation for dice */
+  @keyframes spin { 0%{transform:rotateY(0)} 100%{transform:rotateY(360deg)} }
+  .spinning { animation: spin .35s linear; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">🎲 XÁC SUẤT · TIN HỌC</div>
+  <div class="nav-links">
+    <a href="#theory">Lý thuyết</a>
+    <a href="#examples">Ví dụ</a>
+    <a href="#sim">Mô phỏng</a>
+    <a href="#ai">AI & Bảo mật</a>
+    <a href="#exercises">Bài tập</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">📅 Buổi 04 · 90 phút</div>
+  <h1>Xác Suất –<br><span>Độ Chính Xác & Rủi Ro</span><br>trong Tin Học</h1>
+  <p>Từ tung đồng xu đến bộ lọc spam AI, xác suất là ngôn ngữ của sự không chắc chắn và quyết định thông minh.</p>
+  <div class="hero-meta">
+    <div class="hero-chip">⏱ 90 phút</div>
+    <div class="hero-chip">🎯 Chương 5 – Xác suất cơ bản</div>
+    <div class="hero-chip">📐 P(A) cổ điển & P(A∪B)</div>
+  </div>
+  <!-- interactive dice -->
+  <div class="dice-grid" id="diceRow">
+    <div class="die" onclick="rollDie(this)">⚀</div>
+    <div class="die" onclick="rollDie(this)">⚁</div>
+    <div class="die" onclick="rollDie(this)">⚂</div>
+    <div class="die" onclick="rollDie(this)">⚃</div>
+    <div class="die" onclick="rollDie(this)">⚄</div>
+    <div class="die" onclick="rollDie(this)">⚅</div>
+  </div>
+  <p style="font-size:.78rem;color:var(--muted);margin-top:.8rem;">👆 Click vào xúc xắc để tung</p>
+</section>
+
+<!-- MỤC TIÊU -->
+<section style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="container reveal">
+    <div class="section-label">MỤC TIÊU BUỔI HỌC</div>
+    <h2>Sau buổi học, bạn sẽ…</h2>
+    <div class="grid-3" style="margin-top:1.5rem;">
+      <div class="card bg-purple">
+        <div class="icon-lg" style="background:rgba(108,99,255,.2);">🎯</div>
+        <h3 class="c-purple">Hiểu khái niệm</h3>
+        <p style="font-size:.92rem;color:var(--muted);">Không gian mẫu Ω, biến cố, xác suất cổ điển. Phân biệt kết quả <em>thuận lợi</em> và <em>có thể xảy ra</em>.</p>
+      </div>
+      <div class="card bg-green">
+        <div class="icon-lg" style="background:rgba(67,233,123,.15);">📐</div>
+        <h3 class="c-green">Tính được xác suất</h3>
+        <p style="font-size:.92rem;color:var(--muted);">Áp dụng P(A) và P(A∪B) cho xúc xắc, bài tây, hộp bi, thực tế hàng ngày.</p>
+      </div>
+      <div class="card bg-pink">
+        <div class="icon-lg" style="background:rgba(255,101,132,.15);">🤖</div>
+        <h3 class="c-pink">Kết nối với AI & bảo mật</h3>
+        <p style="font-size:.92rem;color:var(--muted);">Thấy xác suất ẩn trong spam filter, nhận diện khuôn mặt, gợi ý Netflix, bảo mật mật khẩu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LỘ TRÌNH 90 PHÚT -->
+<!-- <section>
+  <div class="container reveal">
+    <div class="section-label">LỘ TRÌNH BUỔI HỌC</div>
+    <h2>Kế hoạch 90 phút</h2>
+    <div class="grid-2" style="margin-top:1.5rem;">
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot" style="background:var(--accent4);box-shadow:0 0 8px rgba(249,202,36,.4);"></div>
+          <div class="tl-time">0 → 10 phút · KHỞI ĐỘNG</div>
+          <div class="tl-title">🎯 Câu hỏi thực tế</div>
+          <div class="tl-desc">"YouTube gợi ý đúng 8/10 lần – đó là xác suất bao nhiêu?" Đặt vấn đề, kết nối cuộc sống.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:var(--accent3);box-shadow:0 0 8px rgba(67,233,123,.4);"></div>
+          <div class="tl-time">10 → 30 phút · THỰC HÀNH</div>
+          <div class="tl-title">🎲 Tung đồng xu & xúc xắc</div>
+          <div class="tl-desc">HS tung thật (hoặc dùng mô phỏng trên trang này). Ghi kết quả → tính xác suất thực nghiệm.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-time">30 → 65 phút · LÝ THUYẾT + BÀI TẬP</div>
+          <div class="tl-title">📖 Công thức & ví dụ mẫu</div>
+          <div class="tl-desc">Dạy P(A) cổ điển, P(A∪B) xung khắc. Giải 4–5 bài mẫu cùng nhau.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:var(--accent2);box-shadow:0 0 8px rgba(255,101,132,.4);"></div>
+          <div class="tl-time">65 → 90 phút · ỨNG DỤNG</div>
+          <div class="tl-title">🤖 Tin học thực tế</div>
+          <div class="tl-desc">Thảo luận AI, spam filter, bảo mật mật khẩu – xác suất ở đâu trong công nghệ?</div>
+        </div>
+      </div>
+      <div class="card" style="align-self:start;">
+        <h3>⚠️ Phạm vi buổi học</h3>
+        <ul class="step-list" style="margin-top:.5rem;">
+          <li>✅ P(A) = số kết quả thuận lợi / tổng số kết quả</li>
+          <li>✅ P(A∪B) = P(A) + P(B) khi A, B xung khắc</li>
+          <li>✅ Nhiều ví dụ thực tế, ít bài trừu tượng</li>
+          <li>❌ Không dạy xác suất có điều kiện P(A|B)</li>
+          <li>❌ Không dạy xác suất nhân P(A∩B)</li>
+          <li>❌ Không dạy tổ hợp, chỉnh hợp phức tạp</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- LÝ THUYẾT -->
+<section id="theory" style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="container reveal">
+    <div class="section-label">LÝ THUYẾT CƠ BẢN</div>
+    <h2>Các khái niệm nền tảng</h2>
+
+    <!-- K/G mẫu -->
+    <div style="margin-top:2rem;">
+      <h3>1. Không gian mẫu và biến cố</h3>
+      <p class="lead">Trước khi tính xác suất, ta cần liệt kê <em>tất cả kết quả có thể xảy ra</em>.</p>
+      <div class="grid-2">
+        <div class="example-box">
+          <div class="ex-label">KHÔNG GIAN MẪU</div>
+          <p style="margin-bottom:.6rem; font-size:.93rem;">Tập hợp Ω chứa <strong>tất cả</strong> kết quả có thể của một thí nghiệm ngẫu nhiên.</p>
+          <ul class="step-list">
+            <li>Tung đồng xu: Ω = {Sấp, Ngửa} → 2 kết quả</li>
+            <li>Gieo xúc xắc: Ω = {1, 2, 3, 4, 5, 6} → 6 kết quả</li>
+            <li>Rút 1 bài từ bộ 52: Ω có 52 kết quả</li>
+            <li>Chọn 1 học sinh từ lớp 30 em: Ω có 30 kết quả</li>
+          </ul>
+        </div>
+        <div class="example-box">
+          <div class="ex-label">BIẾN CỐ</div>
+          <p style="margin-bottom:.6rem; font-size:.93rem;">Biến cố A là <strong>tập con</strong> của Ω – tập hợp các kết quả "mình quan tâm".</p>
+          <ul class="step-list">
+            <li>A = "ra mặt Ngửa" → A = {Ngửa}</li>
+            <li>A = "ra số chẵn" → A = {2, 4, 6}</li>
+            <li>A = "ra số lớn hơn 4" → A = {5, 6}</li>
+            <li>A = "rút được bài đỏ" → A có 26 lá</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Công thức P(A) -->
+    <div style="margin-top:2.5rem;">
+      <h3>2. Công thức xác suất cổ điển</h3>
+      <div class="formula-box">
+        <div class="f-label">CÔNG THỨC CHÍNH</div>
+        <div class="f-main">P(A) = |A| / |Ω| = (Số kết quả thuận lợi) / (Tổng số kết quả có thể)</div>
+        <div class="f-note">Áp dụng khi tất cả kết quả có <strong>cùng khả năng xảy ra</strong> (xúc xắc cân đối, đồng xu đồng đều...)</div>
+      </div>
+      <div class="grid-2" style="margin-top:1rem;">
+        <div class="card bg-purple">
+          <p style="font-size:.9rem;color:var(--muted); margin-bottom:.4rem;">📌 Tính chất quan trọng</p>
+          <ul class="step-list">
+            <li>0 ≤ P(A) ≤ 1 với mọi biến cố A</li>
+            <li>P(∅) = 0 (biến cố không thể xảy ra)</li>
+            <li>P(Ω) = 1 (biến cố chắc chắn)</li>
+            <li>P(A') = 1 − P(A) (biến cố đối lập)</li>
+          </ul>
+        </div>
+        <div class="card bg-green">
+          <p style="font-size:.9rem;color:var(--muted); margin-bottom:.4rem;">✅ Ví dụ nhanh – Xúc xắc</p>
+          <ul class="step-list">
+            <li>P(ra số 1) = 1/6 ≈ 16,7%</li>
+            <li>P(ra số lẻ) = 3/6 = 1/2 = 50%</li>
+            <li>P(ra số chẵn) = 3/6 = 1/2 = 50%</li>
+            <li>P(ra số &gt; 4) = 2/6 = 1/3 ≈ 33,3%</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- P(A∪B) -->
+    <div style="margin-top:2.5rem;">
+      <h3>3. Xác suất cộng – Biến cố xung khắc</h3>
+      <div class="formula-box" style="border-left-color:var(--accent2);">
+        <div class="f-label" style="color:var(--accent2);">XÁC SUẤT CỘNG (biến cố xung khắc)</div>
+        <div class="f-main">P(A∪B) = P(A) + P(B)</div>
+        <div class="f-note">⚡ Chỉ áp dụng khi A và B <strong>xung khắc</strong> – tức A và B <strong>không thể đồng thời xảy ra</strong>.</div>
+      </div>
+      <div class="example-box">
+        <div class="ex-label">VÍ DỤ MINH HỌA</div>
+        <p style="margin-bottom:.7rem; font-size:.93rem;">Gieo xúc xắc. A = "ra số 2", B = "ra số 5". Vì không thể vừa ra 2 vừa ra 5 nên:</p>
+        <p style="font-family:'JetBrains Mono',monospace; font-size:.9rem;">P(A∪B) = P(ra số 2 hoặc số 5) = 1/6 + 1/6 = 2/6 = 1/3</p>
+      </div>
+      <div class="card" style="margin-top:1rem; background:rgba(255,101,132,.06);">
+        <h4 style="color:var(--accent2); margin-bottom:.5rem;">⚠️ Khi nào KHÔNG phải xung khắc?</h4>
+        <p style="font-size:.9rem; color:var(--muted);">A = "ra số chẵn" và B = "ra số lớn hơn 3" — số 4 và 6 vừa chẵn vừa &gt; 3. Hai biến cố này <strong>không</strong> xung khắc, <strong>không dùng công thức cộng đơn giản</strong> này.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VÍ DỤ MẪU -->
+<section id="examples">
+  <div class="container reveal">
+    <div class="section-label">VÍ DỤ MẪU CÓ LỜI GIẢI</div>
+    <h2>6 ví dụ thực hành</h2>
+    <p class="lead">Mỗi bài có đầy đủ các bước giải chi tiết để bạn có thể tự học lại sau giờ.</p>
+
+    <!-- Bài 1 -->
+    <div class="example-box" style="margin-top:1.5rem;">
+      <div class="ex-label">BÀI 1 · XÚC XẮC</div>
+      <p style="font-weight:600; margin-bottom:.8rem;">Gieo một xúc xắc 6 mặt cân đối. Tính P(ra số 3) và P(ra số lẻ).</p>
+      <ul class="step-list">
+        <li><strong>Không gian mẫu:</strong> Ω = {1, 2, 3, 4, 5, 6} → |Ω| = 6</li>
+        <li><strong>Biến cố A</strong> = "ra số 3" → A = {3} → |A| = 1</li>
+        <li><strong>Biến cố B</strong> = "ra số lẻ" → B = {1, 3, 5} → |B| = 3</li>
+      </ul>
+      <!-- <div class="answer">P(A) = 1/6 ≈ <span>16,67%</span> &nbsp;|&nbsp; P(B) = 3/6 = 1/2 = <span>50%</span></div> -->
+    </div>
+
+    <!-- Bài 2 -->
+    <div class="example-box">
+      <div class="ex-label">BÀI 2 · BỘ BÀI TÂY 52 LÁ</div>
+      <p style="font-weight:600; margin-bottom:.8rem;">Rút ngẫu nhiên 1 lá bài từ bộ 52. Tính xác suất rút được: (a) bài K, (b) bài đỏ, (c) bài Rô (cơ đỏ).</p>
+      <ul class="step-list">
+        <li><strong>Bộ 52 lá:</strong> 4 chất (♠♣♥♦), 13 giá trị mỗi chất. Đỏ = ♥♦ (26 lá), Đen = ♠♣ (26 lá)</li>
+        <li>(a) Bài K: có 4 lá K (K♠, K♣, K♥, K♦)</li>
+        <li>(b) Bài đỏ: có 26 lá đỏ (13 cơ + 13 rô)</li>
+        <li>(c) Bài Rô ♦: có 13 lá</li>
+      </ul>
+      <!-- <div class="answer">P(K) = 4/52 = <span>1/13 ≈ 7,7%</span> &nbsp;|&nbsp; P(đỏ) = 26/52 = <span>1/2 = 50%</span> &nbsp;|&nbsp; P(Rô) = 13/52 = <span>1/4 = 25%</span></div> -->
+    </div>
+
+    <!-- Bài 3 -->
+    <div class="example-box">
+      <div class="ex-label">BÀI 3 · HỘP BI</div>
+      <p style="font-weight:600; margin-bottom:.8rem;">Hộp có 5 bi đỏ, 3 bi xanh, 2 bi vàng. Lấy ngẫu nhiên 1 bi. Tính P(đỏ), P(xanh hoặc vàng).</p>
+      <ul class="step-list">
+        <li><strong>Tổng số bi:</strong> 5 + 3 + 2 = 10</li>
+        <li>P(đỏ) = 5/10 = 1/2</li>
+        <li>"Xanh hoặc vàng" → A xung khắc với B (không thể vừa xanh vừa vàng)</li>
+        <li>P(xanh ∪ vàng) = P(xanh) + P(vàng) = 3/10 + 2/10</li>
+      </ul>
+      <!-- <div class="answer">P(đỏ) = <span>50%</span> &nbsp;|&nbsp; P(xanh ∪ vàng) = 5/10 = <span>1/2 = 50%</span></div> -->
+    </div>
+
+    <!-- Bài 4 -->
+    <div class="example-box">
+      <div class="ex-label">BÀI 4 · ĐỒNG XU</div>
+      <p style="font-weight:600; margin-bottom:.8rem;">Tung đồng xu 2 lần. Tính P(ra ít nhất 1 lần Ngửa).</p>
+      <ul class="step-list">
+        <li><strong>Ω</strong> = {SS, SN, NS, NN} → |Ω| = 4 (S = Sấp, N = Ngửa)</li>
+        <li>Biến cố "ít nhất 1 Ngửa" = {SN, NS, NN} → 3 kết quả thuận lợi</li>
+        <li>Cách khác: P(ít nhất 1N) = 1 − P(không có N nào) = 1 − P(SS) = 1 − 1/4</li>
+      </ul>
+      <!-- <div class="answer">P(ít nhất 1 Ngửa) = 3/4 = <span>75%</span></div> -->
+    </div>
+
+    <!-- Bài 5 -->
+    <div class="example-box">
+      <div class="ex-label">BÀI 5 · LỚP HỌC</div>
+      <p style="font-weight:600; margin-bottom:.8rem;">Lớp có 30 học sinh: 18 nữ, 12 nam. Chọn ngẫu nhiên 1 học sinh trực nhật. Tính P(chọn học sinh nữ) và P(chọn học sinh nam).</p>
+      <ul class="step-list">
+        <li>Ω có 30 phần tử (30 học sinh, mỗi bạn có cơ hội bằng nhau)</li>
+        <li>P(nữ) = 18/30 = 3/5 = 60%</li>
+        <li>P(nam) = 12/30 = 2/5 = 40%</li>
+        <li>Kiểm tra: P(nữ) + P(nam) = 3/5 + 2/5 = 1 ✓</li>
+      </ul>
+      <!-- <div class="answer">P(nữ) = <span>60%</span> &nbsp;|&nbsp; P(nam) = <span>40%</span></div> -->
+    </div>
+
+    <!-- Bài 6 -->
+    <div class="example-box">
+      <div class="ex-label">BÀI 6 · ỨNG DỤNG THỰC TẾ</div>
+      <p style="font-weight:600; margin-bottom:.8rem;">Một chiếc máy ATM yêu cầu mã PIN 4 chữ số (từ 0000 đến 9999). Nếu bạn đoán ngẫu nhiên, xác suất đoán đúng PIN là bao nhiêu? Kẻ tấn công cần bao nhiêu lần thử để có 50% cơ hội thành công?</p>
+      <ul class="step-list">
+        <li>Tổng số PIN có thể: 10 × 10 × 10 × 10 = 10.000 (từ 0000 đến 9999)</li>
+        <li>P(đoán đúng 1 lần) = 1/10.000 = 0,01%</li>
+        <li>Sau 5.000 lần thử: P(có ít nhất 1 lần đúng) ≈ 39,3%</li>
+        <li>Đây là lý do ATM chỉ cho thử 3 lần – bảo vệ bằng xác suất!</li>
+      </ul>
+      <!-- <div class="answer">P(đoán đúng 1 lần) = 1/10.000 = <span>0,01%</span> → Vì vậy giới hạn số lần thử cực kỳ quan trọng!</div> -->
+    </div>
+  </div>
+</section>
+
+<!-- MÔ PHỎNG -->
+<section id="sim" style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="container reveal">
+    <div class="section-label">HOẠT ĐỘNG THỰC HÀNH</div>
+    <h2>Mô phỏng thí nghiệm ngẫu nhiên</h2>
+    <p class="lead">Thực nghiệm để thấy: xác suất lý thuyết và thực nghiệm ngày càng gần nhau khi số lần thử tăng!</p>
+
+    <div class="grid-2">
+      <!-- Đồng xu -->
+      <div class="card">
+        <h3>🪙 Tung đồng xu</h3>
+        <div class="sim-area" id="coinArea">
+          <div class="sim-display" id="coinDisplay">🪙</div>
+          <button class="btn" onclick="flipCoin()">Tung 1 lần</button>
+          <button class="btn secondary" onclick="flipCoinN(100)">Tung 100 lần</button>
+          <button class="btn secondary" onclick="resetCoin()">Đặt lại</button>
+        </div>
+        <div id="coinStats"></div>
+        <div style="margin-top:1rem; font-size:.85rem; color:var(--muted);">
+          <strong>Lý thuyết:</strong> P(Ngửa) = 1/2 = 50%
+        </div>
+      </div>
+      <!-- Xúc xắc -->
+      <div class="card">
+        <h3>🎲 Gieo xúc xắc</h3>
+        <div class="sim-area" id="diceArea">
+          <div class="sim-display" id="diceDisplay">⚄</div>
+          <button class="btn" onclick="rollDice()">Tung 1 lần</button>
+          <button class="btn secondary" onclick="rollDiceN(60)">Tung 60 lần</button>
+          <button class="btn secondary" onclick="resetDice()">Đặt lại</button>
+        </div>
+        <div id="diceStats"></div>
+        <div style="margin-top:1rem; font-size:.85rem; color:var(--muted);">
+          <strong>Lý thuyết:</strong> Mỗi mặt = 1/6 ≈ 16,7%
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI & BẢO MẬT -->
+<section id="ai">
+  <div class="container reveal">
+    <div class="section-label">TIN HỌC ỨNG DỤNG</div>
+    <h2>Xác suất trong AI & Bảo mật</h2>
+    <p class="lead">Xác suất không chỉ trong sách giáo khoa — nó là nền tảng của hầu hết công nghệ AI mà bạn dùng hàng ngày.</p>
+
+    <div style="margin-top:1.5rem;">
+      <div class="ai-card">
+        <div class="ai-icon">📧</div>
+        <div class="ai-content">
+          <h4>Bộ lọc Spam (Spam Filter) <span class="prob-badge">P ≈ 95–99%</span></h4>
+          <p>Gmail phân loại email vào "Hộp thư đến" hay "Thư rác" dựa trên xác suất. Khi model thấy từ "trúng thưởng", "click ngay", "miễn phí", nó tính <em>xác suất là spam</em>. Nếu P(spam) > 0,9 → tự động chuyển vào thư rác. Độ chính xác thực tế đạt 99,9% — tức 1 trong 1.000 email bị phân loại sai.</p>
+        </div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-icon">🎬</div>
+        <div class="ai-content">
+          <h4>Gợi ý phim Netflix / YouTube <span class="prob-badge">P ≈ 80%</span></h4>
+          <p>Thuật toán tính P(bạn thích phim X | lịch sử xem của bạn). Nếu xác suất cao → hiện lên đầu danh sách gợi ý. YouTube đạt ~80% tỷ lệ gợi ý đúng (8/10 video đề xuất thường được xem). Đây chính là câu hỏi khởi động của buổi học!</p>
+        </div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-icon">🔐</div>
+        <div class="ai-content">
+          <h4>Bảo mật mật khẩu & Brute Force <span class="prob-badge">P → 0</span></h4>
+          <p>Mật khẩu 8 ký tự chữ + số: 62⁸ ≈ 218 tỷ kết hợp. P(đoán đúng 1 lần) = 1/218,000,000,000 ≈ 0%. Hacker dùng "brute force" thử hàng triệu mật khẩu/giây — đây là lý do website khóa tài khoản sau 5 lần sai, và tại sao mật khẩu dài hơn thì an toàn hơn theo cấp số nhân.</p>
+        </div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-icon">😊</div>
+        <div class="ai-content">
+          <h4>Nhận diện khuôn mặt (Face ID) <span class="prob-badge">P ≈ 99,9%</span></h4>
+          <p>Apple Face ID có tỷ lệ lỗi 1/1.000.000 — tức P(nhận nhầm người khác) = 0,0001%. So sánh: mã PIN 4 số có P(đoán đúng) = 1/10.000 = 0,01%. Face ID an toàn gấp 100 lần mã PIN!</p>
+        </div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-icon">🏥</div>
+        <div class="ai-content">
+          <h4>AI chẩn đoán bệnh <span class="prob-badge">P ≈ 90–97%</span></h4>
+          <p>AI đọc ảnh X-quang tính P(ung thư | hình ảnh này). Độ chính xác 95% nghe hay, nhưng nếu 1 triệu người xét nghiệm, 50.000 người bị chẩn đoán sai. Đây là lý do AI hỗ trợ bác sĩ chứ không thay thế hoàn toàn — xác suất sai vẫn có ý nghĩa rất lớn trong y tế!</p>
+        </div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-icon">🚗</div>
+        <div class="ai-content">
+          <h4>Xe tự lái (Tesla Autopilot) <span class="prob-badge">P ≈ 99,99%</span></h4>
+          <p>Hệ thống phân loại vật cản: P(đây là người đi bộ) = 0,97, P(đây là cột điện) = 0,02. Xe quyết định dừng lại hay tiếp tục dựa trên ngưỡng xác suất. Khi P(nguy hiểm) > 0,8 → phanh khẩn cấp. Sai số 0,01% vẫn có thể gây tai nạn — đó là thách thức lớn nhất của xe tự lái.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Câu hỏi thảo luận -->
+    <div class="card" style="margin-top:2rem; background:rgba(108,99,255,.08); border-color:rgba(108,99,255,.3);">
+      <h3 class="c-purple">💬 Câu hỏi thảo luận nhóm</h3>
+      <ul class="step-list" style="margin-top:.8rem;">
+        <li>Nếu spam filter đạt 99% chính xác và bạn nhận 100 email/ngày, trung bình bao nhiêu email bị phân loại sai?</li>
+        <li>Tại sao mật khẩu 8 ký tự an toàn hơn mật khẩu 4 ký tự rất nhiều, dù chỉ thêm 4 ký tự?</li>
+        <li>Nếu Face ID sai 1/1.000.000 lần, và toàn thế giới có 1 tỷ người dùng, mỗi ngày tháo khóa 10 lần — có bao nhiêu lần Face ID nhận nhầm người?</li>
+        <li>Xác suất 95% nghe có vẻ cao. Nhưng trong y tế, 95% nghĩa là 5% bệnh nhân bị chẩn đoán sai. Điều này có vấn đề gì?</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- BÀI TẬP -->
+<section id="exercises" style="background:var(--surface); border-top:1px solid var(--border);">
+  <div class="container reveal">
+    <div class="section-label">BÀI TẬP LUYỆN TẬP</div>
+    <h2>Kiểm tra kiến thức</h2>
+    <p class="lead">Click vào đáp án để kiểm tra. Mỗi bài đều có giải thích chi tiết.</p>
+
+    <!-- Bài 1 dễ -->
+    <div class="quiz-card" id="q1">
+      <span class="difficulty easy">DỄ · Xúc xắc</span>
+      <div class="quiz-q">Gieo một xúc xắc cân đối. P(ra số 4) bằng bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q1',this,false)">A. 4/6</button>
+        <button class="opt-btn" onclick="check('q1',this,true)">B. 1/6</button>
+        <button class="opt-btn" onclick="check('q1',this,false)">C. 2/6</button>
+        <button class="opt-btn" onclick="check('q1',this,false)">D. 1/4</button>
+      </div>
+      <div class="feedback" id="q1-fb"></div>
+    </div>
+
+    <div class="quiz-card" id="q2">
+      <span class="difficulty easy">DỄ · Xúc xắc</span>
+      <div class="quiz-q">Gieo xúc xắc. P(ra số chẵn) bằng bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q2',this,false)">A. 1/6</button>
+        <button class="opt-btn" onclick="check('q2',this,false)">B. 2/6</button>
+        <button class="opt-btn" onclick="check('q2',this,true)">C. 3/6 = 1/2</button>
+        <button class="opt-btn" onclick="check('q2',this,false)">D. 4/6</button>
+      </div>
+      <div class="feedback" id="q2-fb"></div>
+    </div>
+
+    <div class="quiz-card" id="q3">
+      <span class="difficulty easy">DỄ · Bài tây</span>
+      <div class="quiz-q">Rút 1 lá từ bộ 52. P(rút được bài K – tức bộ 4 lá K) bằng bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q3',this,true)">A. 4/52 = 1/13</button>
+        <button class="opt-btn" onclick="check('q3',this,false)">B. 1/52</button>
+        <button class="opt-btn" onclick="check('q3',this,false)">C. 13/52</button>
+        <button class="opt-btn" onclick="check('q3',this,false)">D. 4/13</button>
+      </div>
+      <div class="feedback" id="q3-fb"></div>
+    </div>
+
+    <div class="quiz-card" id="q4">
+      <span class="difficulty easy">DỄ · Bài tây</span>
+      <div class="quiz-q">Rút 1 lá từ bộ 52. P(rút được bài màu đỏ ♥♦) bằng bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q4',this,false)">A. 13/52</button>
+        <button class="opt-btn" onclick="check('q4',this,false)">B. 4/52</button>
+        <button class="opt-btn" onclick="check('q4',this,true)">C. 26/52 = 1/2</button>
+        <button class="opt-btn" onclick="check('q4',this,false)">D. 2/52</button>
+      </div>
+      <div class="feedback" id="q4-fb"></div>
+    </div>
+
+    <div class="quiz-card" id="q5">
+      <span class="difficulty medium">TRUNG BÌNH · Hộp bi</span>
+      <div class="quiz-q">Hộp có 6 bi đỏ và 4 bi xanh. Lấy ngẫu nhiên 1 bi. P(lấy được bi đỏ HOẶC bi xanh) bằng bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q5',this,false)">A. 6/10</button>
+        <button class="opt-btn" onclick="check('q5',this,false)">B. 4/10</button>
+        <button class="opt-btn" onclick="check('q5',this,true)">C. 10/10 = 1</button>
+        <button class="opt-btn" onclick="check('q5',this,false)">D. 24/100</button>
+      </div>
+      <div class="feedback" id="q5-fb"></div>
+    </div>
+
+    <div class="quiz-card" id="q6">
+      <span class="difficulty medium">TRUNG BÌNH · Xúc xắc</span>
+      <div class="quiz-q">Gieo xúc xắc. A = "ra số 1", B = "ra số 6". P(A∪B) = P(ra số 1 hoặc số 6) bằng bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q6',this,false)">A. 1/6</button>
+        <button class="opt-btn" onclick="check('q6',this,true)">B. 2/6 = 1/3</button>
+        <button class="opt-btn" onclick="check('q6',this,false)">C. 1/36</button>
+        <button class="opt-btn" onclick="check('q6',this,false)">D. 3/6</button>
+      </div>
+      <div class="feedback" id="q6-fb"></div>
+    </div>
+
+    <div class="quiz-card" id="q7">
+      <span class="difficulty medium">TRUNG BÌNH · Đồng xu</span>
+      <div class="quiz-q">Tung đồng xu 2 lần. Không gian mẫu Ω = {SS, SN, NS, NN}. P(ra đúng 1 lần Ngửa) bằng bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q7',this,false)">A. 1/4</button>
+        <button class="opt-btn" onclick="check('q7',this,true)">B. 2/4 = 1/2</button>
+        <button class="opt-btn" onclick="check('q7',this,false)">C. 3/4</button>
+        <button class="opt-btn" onclick="check('q7',this,false)">D. 1/2 × 1/2 = 1/4</button>
+      </div>
+      <div class="feedback" id="q7-fb"></div>
+    </div>
+
+    <div class="quiz-card" id="q8">
+      <span class="difficulty hard">NÂNG CAO · Ứng dụng</span>
+      <div class="quiz-q">Mật khẩu gồm 4 chữ số (0–9). P(đoán đúng mật khẩu trong 1 lần thử ngẫu nhiên) là bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q8',this,false)">A. 1/40 = 2,5%</button>
+        <button class="opt-btn" onclick="check('q8',this,false)">B. 1/1.000 = 0,1%</button>
+        <button class="opt-btn" onclick="check('q8',this,true)">C. 1/10.000 = 0,01%</button>
+        <button class="opt-btn" onclick="check('q8',this,false)">D. 4/10 = 40%</button>
+      </div>
+      <div class="feedback" id="q8-fb"></div>
+    </div>
+
+    <div class="quiz-card" id="q9">
+      <span class="difficulty hard">NÂNG CAO · Suy luận</span>
+      <div class="quiz-q">Lớp học 20 học sinh chọn ngẫu nhiên 1 bạn. P(không chọn bạn An) bằng bao nhiêu?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="check('q9',this,false)">A. 1/20</button>
+        <button class="opt-btn" onclick="check('q9',this,false)">B. 1/19</button>
+        <button class="opt-btn" onclick="check('q9',this,true)">C. 19/20</button>
+        <button class="opt-btn" onclick="check('q9',this,false)">D. 20/20</button>
+      </div>
+      <div class="feedback" id="q9-fb"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>📐 Chương 5 – Xác suất · GDPT 2018 · Toán 10 · Buổi 04</p>
+  <p style="margin-top:.3rem; color:#555;">Thiết kế cho lớp học lập trình & tin học ứng dụng</p>
+</footer>
+
+<script>
+/* ── DICE IN HERO ── */
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+function rollDie(el) {
+  el.classList.add('spinning');
+  const n = Math.floor(Math.random()*6);
+  el.textContent = DICE_FACES[n];
+  el.classList.remove('highlight');
+  void el.offsetWidth;
+  el.classList.add('highlight');
+  setTimeout(()=>el.classList.remove('spinning'),350);
+}
+
+/* ── COIN SIMULATION ── */
+let coinH=0, coinT=0;
+function flipCoin(){
+  const r=Math.random()<.5;
+  coinH+=r?1:0; coinT+=r?0:1;
+  const el=document.getElementById('coinDisplay');
+  el.textContent = r ? '🌝' : '🌚';
+  renderCoinStats();
+}
+function flipCoinN(n){
+  for(let i=0;i<n;i++){const r=Math.random()<.5; coinH+=r?1:0; coinT+=r?0:1;}
+  document.getElementById('coinDisplay').textContent = '🌝🌚';
+  renderCoinStats();
+}
+function resetCoin(){ coinH=0; coinT=0; document.getElementById('coinDisplay').textContent='🪙'; renderCoinStats(); }
+function renderCoinStats(){
+  const total=coinH+coinT;
+  if(!total){document.getElementById('coinStats').innerHTML='';return;}
+  const ph=(coinH/total*100).toFixed(1);
+  const pt=(coinT/total*100).toFixed(1);
+  document.getElementById('coinStats').innerHTML=`
+    <div class="sim-stats">
+      <div class="stat-chip">🌝 Ngửa: <span>${coinH}</span></div>
+      <div class="stat-chip">🌚 Sấp: <span>${coinT}</span></div>
+      <div class="stat-chip">Tổng: <span>${total}</span></div>
+    </div>
+    <div style="margin-top:1rem;">
+      <div class="bar-wrap"><div class="bar-label"><span>Ngửa</span><span>${ph}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${ph}%;background:var(--accent);"></div></div></div>
+      <div class="bar-wrap"><div class="bar-label"><span>Sấp</span><span>${pt}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${pt}%;background:var(--accent2);"></div></div></div>
+    </div>`;
+}
+
+/* ── DICE SIMULATION ── */
+let diceCount=[0,0,0,0,0,0];
+function rollDice(){
+  const n=Math.floor(Math.random()*6);
+  diceCount[n]++;
+  document.getElementById('diceDisplay').textContent=DICE_FACES[n];
+  renderDiceStats();
+}
+function rollDiceN(n){
+  for(let i=0;i<n;i++){const r=Math.floor(Math.random()*6); diceCount[r]++;}
+  document.getElementById('diceDisplay').textContent='🎲';
+  renderDiceStats();
+}
+function resetDice(){diceCount=[0,0,0,0,0,0];document.getElementById('diceDisplay').textContent='⚄';renderDiceStats();}
+function renderDiceStats(){
+  const total=diceCount.reduce((a,b)=>a+b,0);
+  if(!total){document.getElementById('diceStats').innerHTML='';return;}
+  const colors=['var(--accent)','var(--accent2)','var(--accent3)','var(--accent4)','#00d2ff','#ff9f43'];
+  let bars='';
+  for(let i=0;i<6;i++){
+    const p=(diceCount[i]/total*100).toFixed(1);
+    bars+=`<div class="bar-wrap"><div class="bar-label"><span>${DICE_FACES[i]} Mặt ${i+1}</span><span>${p}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${colors[i]};"></div></div></div>`;
+  }
+  document.getElementById('diceStats').innerHTML=`<div class="sim-stats"><div class="stat-chip">Tổng: <span>${total}</span> lần</div></div><div style="margin-top:1rem;">${bars}</div>`;
+}
+
+/* ── QUIZ ── */
+const explanations = {
+  q1: '✅ Đúng! Ω = {1,2,3,4,5,6} có 6 kết quả. Biến cố "ra số 4" chỉ có 1 kết quả thuận lợi → P = 1/6.',
+  q2: '✅ Đúng! Số chẵn = {2,4,6} → 3 kết quả thuận lợi trong 6 → P = 3/6 = 1/2 = 50%.',
+  q3: '✅ Đúng! Bộ 52 có 4 lá K (K♠, K♣, K♥, K♦). P(K) = 4/52 = 1/13 ≈ 7,7%.',
+  q4: '✅ Đúng! Bài đỏ gồm ♥ và ♦, mỗi chất 13 lá → 26 lá đỏ. P = 26/52 = 1/2 = 50%.',
+  q5: '✅ Đúng! "Đỏ hoặc xanh" bao gồm tất cả 10 bi. P = 10/10 = 1. Đây là biến cố chắc chắn!',
+  q6: '✅ Đúng! A={1} và B={6} là xung khắc. P(A∪B) = 1/6 + 1/6 = 2/6 = 1/3.',
+  q7: '✅ Đúng! Đúng 1 lần Ngửa = {SN, NS} → 2 kết quả trong 4. P = 2/4 = 1/2.',
+  q8: '✅ Đúng! PIN 4 chữ số: 10⁴ = 10.000 kết hợp → P = 1/10.000 = 0,01%.',
+  q9: '✅ Đúng! P(không chọn An) = 1 − P(chọn An) = 1 − 1/20 = 19/20.'
+};
+const wrong_msg = '❌ Chưa đúng! Hãy đọc lại đề và áp dụng P(A) = số kết quả thuận lợi / tổng số kết quả.';
+function check(id, btn, isCorrect){
+  const card=document.getElementById(id);
+  if(card.dataset.done) return;
+  card.dataset.done='1';
+  const btns=card.querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+  const fb=document.getElementById(id+'-fb');
+  if(isCorrect){
+    btn.classList.add('correct');
+    fb.textContent=explanations[id];
+    fb.className='feedback show ok';
+  } else {
+    btn.classList.add('wrong');
+    fb.textContent=wrong_msg+' Đáp án: '+[...btns].find(b=>b.onclick.toString().includes('true')).textContent;
+    fb.className='feedback show no';
+  }
+}
+
+/* ── SCROLL REVEAL ── */
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in-view'); });
+},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+</script>
+</body>
+</html>
